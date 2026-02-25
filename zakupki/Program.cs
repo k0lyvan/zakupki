@@ -88,6 +88,24 @@ namespace zakupki
 
             zakupka.FioContact = author.GetProperty("last_name").GetString() + " " + author.GetProperty("first_name").GetString() + " " + author.GetProperty("patronymic").GetString();
             zakupka.contactNumber = author.GetProperty("phone").ToString();
+
+            var materials = data.GetProperty("materials");
+            int countPoz = materials.GetArrayLength();
+            if (countPoz > 0)
+            {
+                int i = 0;
+                zakupka.purchasePozition = new Pozition[countPoz];
+                foreach (var material in materials.EnumerateArray())
+                {
+                    zakupka.purchasePozition[i] = new Pozition();
+                    zakupka.purchasePozition[i].count = material.GetProperty("amount").GetInt32();
+                    var mater = material.GetProperty("material");
+                    zakupka.purchasePozition[i].name = mater.GetProperty("name_full").GetString();
+                    zakupka.purchasePozition[i].unit = mater.GetProperty("unit_rest").GetString();
+                    i++;
+                }
+            }
+
         }
     } 
 }
