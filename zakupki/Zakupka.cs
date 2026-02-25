@@ -9,7 +9,7 @@ namespace zakupki
     internal struct Price
     {
         public decimal prices { get; set; }
-        public enum Valut { RUB, EUR, USD }
+        public enum Valut { RUB, EUR, USD, CNY, GBP }
     }
     internal class Pozition
     {
@@ -22,7 +22,7 @@ namespace zakupki
     {
         public string? url {  get; set; }
         public int? id { get; set; }
-        public string? discripton { get; set; }
+        public string? descripton { get; set; }
         public DateTimeOffset? dateStart { get; set; }
         public DateTimeOffset? dateEnd { get; set; }
         public Price? purchasePrice { get; set; }

@@ -32,6 +32,14 @@ namespace zakupki
                 Console.WriteLine($"Просмотр страниц {i}");
                 await ParsePage(i, zakupki, client);
             }
+
+            for (int i = 0; i< total; i++)
+            {
+                //Thread.Sleep(300);
+                Console.WriteLine($"Просмотр записи {i+1}");
+                await ParseZakupka(zakupki[i], client);
+                
+            }
             Console.ReadKey();
         }
         private static async Task ParsePage (int page, Zakupka[] zakupka, HttpClient client)
@@ -58,6 +66,28 @@ namespace zakupki
                 j++;
             }
         }
+        private static async Task ParseZakupka (Zakupka zakupka, HttpClient client)
+        {
+            string url = $"https://apizakupki.nefteavtomatika.ru/api/purchases/{zakupka.id}";
 
+            await using var stream = await client.GetStreamAsync(url);
+            var doc = await JsonDocument.ParseAsync(stream);
+            var root = doc.RootElement;
+            var data = root.GetProperty("purchase");
+
+            zakupka.descripton = data.GetProperty("description").GetString();
+            zakupka.dateStart = DateTime.Parse(data.GetProperty("status_start_at").GetString());
+            zakupka.dateEnd = DateTime.Parse(data.GetProperty("status_end_at").GetString());
+
+            var company = data.GetProperty("company");
+            var name = company.GetProperty("name");
+
+            zakupka.companyName = name.GetProperty("full").GetString();
+
+            var author = data.GetProperty("author");
+
+            zakupka.FioContact = author.GetProperty("last_name").GetString() + " " + author.GetProperty("first_name").GetString() + " " + author.GetProperty("patronymic").GetString();
+            zakupka.contactNumber = author.GetProperty("phone").ToString();
+        }
     } 
 }
