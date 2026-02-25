@@ -3,22 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace zakupki
 {
-    internal struct Price
+    [Serializable]
+    public struct Price
     {
         public decimal prices { get; set; }
         public enum Valut { RUB, EUR, USD, CNY, GBP }
     }
-    internal class Pozition
+    public class Pozition
     {
         public string? name { get; set; }
         public int? count { get; set; }
         public string? unit { get; set; }
         public Price? pricePozition { get; set; }
     }
-    internal class Zakupka
+    public class Zakupka
     {
         public string? url {  get; set; }
         public int? id { get; set; }

@@ -3,6 +3,7 @@ using Microsoft.Playwright;
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Xml.Serialization;
 
 namespace zakupki
 {
@@ -27,10 +28,12 @@ namespace zakupki
 
             Zakupka[] zakupki = new Zakupka[total];
 
+            int currentIndex = 0;
+
             for (int i = 1; i <= lastPage; i++)
             {
                 Console.WriteLine($"Просмотр страниц {i}");
-                await ParsePage(i, zakupki, client);
+                currentIndex = await ParsePage(i, zakupki, client, currentIndex);
             }
 
             for (int i = 0; i< total; i++)
@@ -40,31 +43,38 @@ namespace zakupki
                 await ParseZakupka(zakupki[i], client);
                 
             }
+
+            SaveToXml(zakupki);
             Console.ReadKey();
         }
-        private static async Task ParsePage (int page, Zakupka[] zakupka, HttpClient client)
+        private static async Task<int> ParsePage(int page, Zakupka[] zakupka, HttpClient client, int startIndex)
         {
             string url = $"https://apizakupki.nefteavtomatika.ru/api/purchases?page={page}&order_by[number]=desc&per_page=30";
 
             await using var stream = await client.GetStreamAsync(url);
             var doc = await JsonDocument.ParseAsync(stream);
-            var root = doc.RootElement;
-            var data = root.GetProperty("data");
 
-            ParseData(zakupka, data);
+            var data = doc.RootElement.GetProperty("data");
+
+            return ParseData(zakupka, data, startIndex);
         }
         static int j = 0;
-        private static void ParseData(Zakupka[] zakupka, JsonElement data)
+        private static int ParseData(Zakupka[] zakupka,JsonElement data,int startIndex)
         {
-            
+            int j = startIndex;
 
             foreach (var item in data.EnumerateArray())
             {
-                zakupka[j] = new Zakupka();
-                zakupka[j].id = item.GetProperty("id").GetInt32();
-                zakupka[j].url = $"https://zakupki.nefteavtomatika.ru/purchases/{zakupka[j].id}/show";
+                zakupka[j] = new Zakupka
+                {
+                    id = item.GetProperty("id").GetInt32(),
+                    url = $"https://zakupki.nefteavtomatika.ru/purchases/{item.GetProperty("id").GetInt32()}/show"
+                };
+
                 j++;
             }
+
+            return j;
         }
         private static async Task ParseZakupka (Zakupka zakupka, HttpClient client)
         {
@@ -106,6 +116,15 @@ namespace zakupki
                 }
             }
 
+        }
+        private static void SaveToXml(Zakupka[] zakupki)
+        {
+            var serializer = new XmlSerializer(typeof(Zakupka[]));
+
+            using var fs = new FileStream("zakupki.xml", FileMode.Create);
+            serializer.Serialize(fs, zakupki);
+
+            Console.WriteLine("XML файл сохранён.");
         }
     } 
 }
